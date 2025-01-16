@@ -2,11 +2,17 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
-func lookup(resolver string, domain string) {
+func lookup(resolver string, domain string) string {
+	var retstr string
+	var stringValue string
 	start := time.Now()
 	r := &net.Resolver{
 		PreferGo: true,
@@ -18,12 +24,22 @@ func lookup(resolver string, domain string) {
 		},
 	}
 	r.LookupHost(context.Background(), domain)
-	elapsed := time.Since(start) / 1000000
-	println(start.String()[:23], resolver, domain, elapsed)
+	elapsed := time.Since(start).Microseconds()
+	stringValue = strconv.FormatInt(elapsed, 10)
+	retstr = start.String()[:23] + "," + resolver + "," + domain + "," + stringValue
+	println(retstr)
+	return retstr
 }
 
 func main() {
 	var list_of_domain [10]string
+	var filename string
+	now := time.Now()
+
+	filename = "dnsbench-output-" + strings.ReplaceAll(strings.ReplaceAll(now.String()[:19], " ", "_"), ":", "_") + ".txt"
+
+	fmt.Println(filename)
+
 	list_of_domain[0] = "vnexpress.net"
 	list_of_domain[1] = "google.com"
 	list_of_domain[2] = "youtube.com"
@@ -41,9 +57,16 @@ func main() {
 	list_of_resolver[2] = "203.113.131.2:53"
 	list_of_resolver[3] = "203.113.188.6:53"
 
-	for i := 0; i < len(list_of_domain); i++ {
-		for j := 0; j < len(list_of_resolver); j++ {
-			lookup(list_of_resolver[j], list_of_domain[i])
+	file, fileErr := os.Create(filename)
+	if fileErr != nil {
+		fmt.Println(fileErr)
+		return
+	}
+	for {
+		for i := 0; i < len(list_of_domain); i++ {
+			for j := 0; j < len(list_of_resolver); j++ {
+				fmt.Fprintf(file, "%v\n", lookup(list_of_resolver[j], list_of_domain[i]))
+			}
 		}
 	}
 }
