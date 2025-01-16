@@ -23,7 +23,7 @@ func lookup(resolver string, domain string) string {
 			return d.DialContext(ctx, network, resolver)
 		},
 	}
-	r.LookupHost(context.Background(), domain)
+	r.LookupIP(context.Background(), "ip4", domain)
 	elapsed := time.Since(start).Microseconds()
 	stringValue = strconv.FormatInt(elapsed, 10)
 	retstr = start.String()[:23] + "," + resolver + "," + domain + "," + stringValue
